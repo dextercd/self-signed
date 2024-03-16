@@ -87,7 +87,7 @@ async function makeSheetCss()
         write: false,
     })
 
-    return new TextDecoder().decode(result.outputFiles[0].contents)
+    return new TextDecoder().decode(result.outputFiles[0].contents).trim()
 }
 
 async function makeIndexHtml()
