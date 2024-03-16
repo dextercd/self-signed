@@ -120,7 +120,8 @@ async function makeIndexHtml()
 }
 
 async function buildAll() {
-    await fs.rm(outDir, { recursive: true })
+    await fs.rm(outDir, { force: true, recursive: true })
+
     await fs.mkdir(outDir, { recursive: true })
     await fs.mkdir(scratchDir, { recursive: true })
 
