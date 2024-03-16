@@ -126,6 +126,7 @@ async function buildAll() {
     await fs.mkdir(scratchDir, { recursive: true })
 
     await Promise.all([
+        fs.copyFile("favicon.ico", path.join(outDir, "favicon.ico")),
         makeIndexHtml(),
     ])
 }
