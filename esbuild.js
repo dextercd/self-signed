@@ -108,8 +108,8 @@ async function makeIndexHtml()
         `<style>${css}</style>`,
     )
     indexHtml = indexHtml.replace(
-        '<link rel="preload" as="fetch" href="sign.wasm">',
-        `<link rel="preload" as="fetch" href="${bundleResult.signWasm}">`,
+        '<link rel="preload" as="fetch" crossorigin="anonymous" href="sign.wasm">',
+        `<link rel="preload" as="fetch" crossorigin="anonymous" href="${bundleResult.signWasm}">`,
     )
     indexHtml = indexHtml.replace(
         '<script async src="index.js"></script>',
