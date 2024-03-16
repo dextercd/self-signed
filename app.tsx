@@ -428,9 +428,9 @@ function CertificateSettingsForm(props: CertificateSettingsParams)
 }
 
 function certFirstName(settings: CertificateSettings): string {
-    const cnMatch = settings.subjectName.match(/\bCN=[^,]*/)
+    const cnMatch = settings.subjectName.match(/\bCN=([^,]*)/)
     if (cnMatch) {
-        const commonName = cnMatch[0].trim()
+        const commonName = cnMatch[1].trim()
         if (commonName)
             return commonName
     }
