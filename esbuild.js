@@ -127,7 +127,6 @@ async function buildAll() {
 
     await Promise.all([
         makeIndexHtml(),
-        makeSheetCss(),
     ])
 }
 
