@@ -1,0 +1,33 @@
+<!doctype html>
+
+<html lang="en">
+
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<meta name="description" content="Easy to use web app that let's you generate self-signed certificates. Gives you a ZIP file containing a proper certificate chain.">
+
+<title>Self-signed certificate</title>
+
+<link rel="stylesheet" href="sheet.css">
+<link rel="preload" as="fetch" href="sign.wasm">
+
+<section id="root">
+    <header>
+        <h1>Make Self-Signed Certificate</h1>
+    </header>
+
+    <noscript>
+        You need JavaScript enabled to use this site.
+    </noscript>
+
+    <form id="disassociate-form" autocomplete="off" style="display:none"></form>
+
+    <div id="app"></div>
+
+    <footer><div>Copyright <a href="mailto:dexter.c.dopping@gmail.com">Dexter Döpping</a></div></footer>
+
+</section>
+
+<script async src="index.js"></script>
+
+</html>
