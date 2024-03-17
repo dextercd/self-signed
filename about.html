@@ -1,0 +1,74 @@
+<!doctype html>
+
+<html lang="en">
+
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="What's the point of self-signed certificates? How does this tool help you create them and how was it made?">
+
+<title>Self-signed certificate</title>
+
+<style>pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5px}.hljs-comment,.hljs-quote{color:#969896}.hljs-variable,.hljs-template-variable,.hljs-tag,.hljs-name,.hljs-selector-id,.hljs-selector-class,.hljs-regexp,.hljs-deletion{color:#d54e53}.hljs-number,.hljs-built_in,.hljs-literal,.hljs-type,.hljs-params,.hljs-meta,.hljs-link{color:#e78c45}.hljs-attribute{color:#e7c547}.hljs-string,.hljs-symbol,.hljs-bullet,.hljs-addition{color:#b9ca4a}.hljs-title,.hljs-section{color:#7aa6da}.hljs-keyword,.hljs-selector-tag{color:#c397d8}.hljs{background:#000;color:#eaeaea}.hljs-emphasis{font-style:italic}.hljs-strong{font-weight:700}*,:before,:after{box-sizing:border-box}body,html{margin:0}html{background-color:#881335;color:#f2f2f2;font-family:sans-serif}#root{display:flex;min-height:100vh;flex-direction:column}#app{align-self:center;max-width:675px;width:100%;padding:0 5px 20px;flex:1}.doc{align-self:center;max-width:780px;width:100%;padding:0 5px 20px;margin:10px 0;flex:1;background-color:#671028;border:1px solid black}@media (max-width: 780px){.doc{border-left:0px;border-right:0px}}footer{min-height:3em;display:flex;justify-content:center;align-items:center;background-color:#111}footer a{color:inherit}a{color:#ff76d0;text-decoration:underline 1px}br-{white-space:nowrap;-webkit-hyphens:none;hyphens:none}fieldset{padding:0;margin:0;border:none}.fields{width:100%;display:flex;flex-direction:row;column-gap:10px;flex-wrap:wrap;margin-bottom:10px}.field{margin-bottom:10px}.field>*{display:block;width:100%}.field>input[type=datetime-local]{width:auto}.field>.fields{padding-left:15px;display:flex}.fields>.field{margin-bottom:0;flex:1}.checkbox-list{padding-top:0;padding-bottom:0;margin-top:0;margin-bottom:0;min-width:250px}.lower-case{text-transform:lowercase}summary{margin:1em 0;-webkit-user-select:none;user-select:none}p.warning{padding-left:4px;border-left:6px solid #ff5;color:#ff5}p.warning:before{content:"⚠️ Warning: "}p.error{padding:4px;border-left:6px solid #d61703;color:#000;background-color:#fff}p.error:before{content:"⚠️ Error: "}.top-bar{background-color:#111;padding:10px 20px 0}.top-bar nav>a{display:inline-block;padding:10px 1em}.top-bar nav>a[data-active]{background:#fff;color:#333;text-decoration:none}.tabbar{position:relative;z-index:10}.tabbar>button{color:inherit;background-color:#5f1d30;padding:5px 10px;border:1px solid black;border-bottom-width:0px;border-right-width:0px;font-size:1.2em}.tabbar>button:last-child{border-right-width:1px}.tabbar>button[data-active=true]{background-color:#b7264f;position:relative;padding-bottom:6px;margin-bottom:-1px}.tabcontent{border:1px solid black;padding:10px;min-height:6em;background-color:#b7264f}</style>
+
+
+<section id="root">
+
+    <div class="top-bar">
+        <h1>Make Self-Signed Certificate</h1>
+
+
+        <nav>
+            <a href=".">App</a>
+            <a href="usage">Usage</a>
+            <a href="" data-active>About</a>
+        </nav>
+
+    </div>
+
+<main class="doc"><h1>Why would you want a self-signed certificate?</h1>
+<p>Self-signed certificates are useful for development, testing, and learning purposes.</p>
+<p>Hopefully, you're using certificates in production. In that case, also using
+them in development and testing means your environment matches production more
+which helps find problems earlier in the development process.</p>
+<p>For learning how to setup a web server,
+it's of course best to use a certificate that's automatically trusted by browsers.
+If you can't easily get one of those for some reason then self-signed certificates are still useful.</p>
+<h1>Why this was made</h1>
+<p>Creating self-signed certificates that work in all browsers is surprisingly tricky.</p>
+<p>Unfortunately, a lot of guidance online is out-of-date or simply bad:
+they don't use the SAN list extension or don't generate a proper certificate chain.
+Using the <code><br->commonName</br-></code> field instead of a SAN list stopped working ages ago, and
+Firefox rejects certificates that are simultaneously a leaf and CA certificate.</p>
+<p>Someone that doesn't know about these issues could waste a lot of time following bad or outdated instructions or even end up giving up.
+This site should make it easy to generate certificates that are accepted in all major, modern browsers.</p>
+<p>Because it's a website, you don't have to learn OS specific programs for generating the certificates.</p>
+<p>There are other sites that can generate self-signed certificates for you,
+but every single one I tried had one or both of the aforementioned problems.</p>
+<p>Also, all but one of the sites generated the certificate server-side
+which means they have a copy of the private key that you end up using.
+This can be a bit of a security concern if you end up installing the certificate into your trust store.
+There's simply no need for this: keys and certificates can be generated directly inside the browser.</p>
+<h1>How this was made</h1>
+<p>C++ is used along with the <a href="https://en.wikipedia.org/wiki/Mbed_TLS">Mbed TLS</a> library to generate the keys and certificates.
+This component is compiled into WebAssembly and ran directly inside your browser.
+This means the certificates and keys are completely private to you.
+<em>No server has your private key</em>, not even momentarily.</p>
+<p>The frontend is built in TypeScript using the <a href="https://preactjs.com/">Preact library</a>.</p>
+<p>CMake is used to build the C++ project and to invoke esbuild.</p>
+<p>This is the complete list of UI/frontend dependencies:</p>
+<ul>
+<li><a href="https://www.npmjs.com/package/@bjorn3/browser_wasi_shim">@bjorn3/browser_wasi_shim</a></li>
+<li><a href="https://www.npmjs.com/package/esbuild">esbuild</a></li>
+<li><a href="https://www.npmjs.com/package/file-saver">file-saver</a></li>
+<li><a href="https://www.npmjs.com/package/highlight.js">highlight.js</a></li>
+<li><a href="https://www.npmjs.com/package/markdown-it">markdown-it</a></li>
+<li><a href="https://www.npmjs.com/package/preact-render-to-string">preact-render-to-string</a></li>
+<li><a href="https://www.npmjs.com/package/preact">preact</a></li>
+</ul>
+<p>The site has no server side logic and is currently hosted on GitHub Pages.</p>
+<p>You can find the source code on GitHub at <a href="https://github.com/dextercd/self-signed">dextercd/self-signed</a>.</p>
+</main>
+
+    <footer><div>Copyright <a href="mailto:dexter.c.dopping@gmail.com">Dexter Döpping</a></div></footer>
+</section>
+
+</html>
