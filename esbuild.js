@@ -24,8 +24,16 @@ const defines = {
     DEBUG: isDev ? "true" : "false",
 }
 
+const target = ["es2022", "chrome119", "firefox115", "safari16.6"]
+
 const commonSettings = {
+    target: target,
+    minify: !isDev,
     define: defines,
+}
+
+const jsCommonSettings = {
+    ...commonSettings,
     sourcemap: isDev,
     loader: {
         ".wasm": "file",
@@ -35,18 +43,18 @@ const commonSettings = {
     },
 }
 
+const cssCommonSettings = commonSettings
+
 async function makeBundle()
 {
     const result = await esbuild.build({
+        ...jsCommonSettings,
         entryPoints: ["index.tsx"],
         bundle: true,
-        minify: !isDev,
         platform: "browser",
-        target: ["es2022"],
         outdir: outDir,
         entryNames: '[dir]/[name]-[hash]',
         metafile: true,
-        ...commonSettings,
     })
 
     let indexJs
@@ -70,11 +78,11 @@ async function makeBundle()
 async function getAppPrerender()
 {
     await esbuild.build({
+        ...jsCommonSettings,
         entryPoints: ["prerender.tsx"],
         bundle: true,
         platform: "node",
         outdir: scratchDir,
-        ...commonSettings,
     })
     return require(scratchDir + "/prerender.js").default
 }
@@ -82,8 +90,8 @@ async function getAppPrerender()
 async function makeSheetCss()
 {
     let result = await esbuild.build({
+        ...cssCommonSettings,
         entryPoints: ["sheet.css"],
-        minify: !isDev,
         write: false,
     })
 
