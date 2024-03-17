@@ -115,6 +115,7 @@ export function SANListInput({ value, onChange, id }: SANListInputParams)
                 <option value={SANType.ip}>{typeLabel(SANType.ip)}</option>
                 <option value={SANType.email}>{typeLabel(SANType.email)}</option>
             </select>
+            {" "}
             <input
                 id={id}
                 key={nextType}
@@ -125,6 +126,7 @@ export function SANListInput({ value, onChange, id }: SANListInputParams)
                 onKeyPress={checkEnter}
                 {...inputTypeAttributes(nextType)}
             />
+            {" "}
             <button type="button" onClick={handleSubmit}>Add</button>
 
             <ul>
