@@ -4,6 +4,7 @@ add_executable(sign
     interface_key.cpp
     interface_san.cpp
     interface_ext_key_usage.cpp
+    copying.cpp
 )
 
 target_link_libraries(sign PRIVATE
