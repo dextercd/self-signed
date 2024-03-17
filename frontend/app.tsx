@@ -417,7 +417,7 @@ function CertificateSettingsForm(props: CertificateSettingsParams)
     const isClient = useIsClient()
 
     const [caCertSettings, setCaCertSettings] = useState<CertInputValue>({
-        subjectName: "C=NL, O=Easy Self Signed, CN=EASYROOTCA", // TODO: *branding*
+        subjectName: "C=NL, O=dexter.döpping.eu/self-signed, CN=ROOT CA",
         sanList: [],
         keyGen: ecP256,
         md: sha2_256,
