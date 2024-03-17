@@ -1,8 +1,8 @@
 cmake_minimum_required(VERSION 3.28)
 
-option(BB_PUBLIC_BUILD "Optimise and obfuscate" FALSE)
-
 project(selfsigned)
+
+option(BB_PUBLIC_BUILD "Optimise and obfuscate" FALSE)
 
 # Setup
 
