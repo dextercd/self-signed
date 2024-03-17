@@ -113,6 +113,16 @@ p.warning::before {
   content: "⚠️ Warning: "
 }
 
+p.error {
+    padding: 4px;
+    border-left: 6px solid #d61703;
+    color: #000;
+    background-color: white;
+}
+p.error::before {
+  content: "⚠️ Error: "
+}
+
 /* Tab bar */
 
 .tabbar {

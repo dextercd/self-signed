@@ -410,6 +410,7 @@ interface CreateResult {
 
 interface CertificateSettingsParams {
     onResult: (res: CreateResult) => void
+    onError: (err: any) => void
 }
 
 function CertificateSettingsForm(props: CertificateSettingsParams)
@@ -445,29 +446,38 @@ function CertificateSettingsForm(props: CertificateSettingsParams)
 
     const handleSubmit = async (e: JSX.TargetedEvent<HTMLFormElement>) => {
         e.preventDefault()
-        const certMaker = await CertMaker.get()
+        try {
+            const certMaker = await CertMaker.get()
 
-        const signingInfo = caInterface.getCertificate(certMaker)
+            const signingInfo = caInterface.getCertificate(certMaker)
 
-        const settings: CertificateSettings = {
-            ...leafSettings,
-            issuerName: signingInfo === "selfsigned" ? leafSettings.subjectName : signingInfo.subjectName,
-            signMethod: signingInfo === "selfsigned" ? "selfsigned" : {pem: signingInfo.keyPem}
+            const settings: CertificateSettings = {
+                ...leafSettings,
+                issuerName: leafSettings.subjectName,
+                signMethod: "selfsigned",
+            }
+
+            if (signingInfo !== "selfsigned") {
+                settings.issuerName = signingInfo.subjectName
+                settings.signMethod = {pem: signingInfo.keyPem}
+            }
+
+            const certData = certMaker.makeCertificate(settings)
+
+            const result: CreateResult = {
+                endCert: certData.certPem,
+                endKey: certData.keyPem,
+                endSettings: settings,
+            }
+
+            if (signingInfo !== "selfsigned") {
+                result.caCert = signingInfo.certPem
+                result.caKey = signingInfo.keyPem
+            }
+            props.onResult(result)
+        } catch (error) {
+            props.onError(error)
         }
-
-        const certData = certMaker.makeCertificate(settings)
-
-        const result: CreateResult = {
-            endCert: certData.certPem,
-            endKey: certData.keyPem,
-            endSettings: settings,
-        }
-
-        if (signingInfo !== "selfsigned") {
-            result.caCert = signingInfo.certPem
-            result.caKey = signingInfo.keyPem
-        }
-        props.onResult(result)
     }
 
     return (
@@ -516,7 +526,11 @@ function certFileName(settings: CertificateSettings) {
 }
 
 export function App() {
+    const [error, setError] = useState<any>()
+
     const onDownload = (result: CreateResult) => {
+        setError(undefined)
+
         const name = certFileName(result.endSettings)
 
         const writer = new ZipWriter()
@@ -536,7 +550,13 @@ export function App() {
         <div>
             <CertificateSettingsForm
                 onResult={onDownload}
+                onError={setError}
             />
+            {error ?
+                <p class="error">
+                    Creating certificate(s): {error.toString()}
+                </p>
+                : null}
         </div>
     )
 }
