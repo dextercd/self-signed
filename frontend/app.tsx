@@ -13,6 +13,7 @@ import { KeyUsage } from "./key_usage"
 import { sha2_256 } from "./md_options"
 import { SANType } from "./san_list"
 import { ZipWriter } from "./zipwriter"
+import { InterfaceErrorCode, InterfaceException } from "./interface_error"
 
 interface CAConfigureProps {
     value: CertInputValue
@@ -60,6 +61,8 @@ interface CAFilesProps {
     keyFile?: File
     onCertFile: (certFile: File | undefined) => void
     onKeyFile: (certFile: File | undefined) => void
+    certError?: string
+    keyError?: string
     certInfo?: CertificateInfo
     required?: boolean
 }
@@ -93,6 +96,22 @@ function CAFiles(props: CAFilesProps)
             setFileInput(keyRef.current, props.keyFile)
     }, [])
 
+    useEffect(() => {
+        if (certRef.current) {
+            certRef.current.setCustomValidity(props.certError ?? "")
+            if (props.certError)
+                certRef.current.reportValidity()
+        }
+    }, [props.certError])
+
+    useEffect(() => {
+        if (keyRef.current) {
+            keyRef.current.setCustomValidity(props.keyError ?? "")
+            if (props.keyError)
+                keyRef.current.reportValidity()
+        }
+    }, [props.keyError])
+
     const certId = useId()
     const keyId = useId()
 
@@ -119,7 +138,17 @@ function CAFiles(props: CAFilesProps)
                 />
             </div>
 
-            {JSON.stringify(props.certInfo)}
+            {props.certInfo ?
+                <div>
+                    <p>Certificate: {props.certInfo.subjectName}</p>
+                    {!props.certInfo.isCa ?
+                        <p class="warning">
+                        Not marked as a CA certificate.
+                        Programs are likely to reject certificates signed by this certificate.
+                        </p>
+                        : null}
+                </div>
+                : null}
         </div>
     )
 }
@@ -171,6 +200,8 @@ function useCaInterface(props: CaInterfaceProps)
 
     const [certFile, setCertFile] = useState<File>()
     const [keyFile, setKeyFile] = useState<File>()
+    const [certFileError, setCertFileError] = useState<string>()
+    const [keyFileError, setKeyFileError] = useState<string>()
 
     const [certFileInfo, setCertFileInfo] = useState<CertificateInfo>()
 
@@ -224,10 +255,33 @@ function useCaInterface(props: CaInterfaceProps)
         throw Error("Unhandled CA tab")
     }
 
+    const handleFileError = (error: any) => {
+        if (error instanceof InterfaceException) {
+            if (error.code == InterfaceErrorCode.ReadCert) {
+                setCertFileError("Error reading certificate file.")
+                return
+            }
+
+            if (error.code == InterfaceErrorCode.ReadKey) {
+                setKeyFileError("Error reading private key file.")
+                return
+            }
+
+            if (error.code == InterfaceErrorCode.KeyMismatch) {
+                setKeyFileError("Private key doesn't match the supplied certificates.")
+                return
+            }
+        }
+
+        setCertFileError(`Unexpected error: ${error.toString()}`)
+    }
+
     useEffect(() => {
         setCertFileInfo(undefined)
         setFileCertificatePem(undefined)
         setFileKeyPem(undefined)
+        setCertFileError(undefined)
+        setKeyFileError(undefined)
 
         if (!certFile) return
 
@@ -242,9 +296,15 @@ function useCaInterface(props: CaInterfaceProps)
 
             if (ignore) return
 
-            const certInfo = keyContent
-                ? certMaker.getCertificateKeyInfo(certContent, keyContent)
-                : certMaker.getCertificateInfo(certContent)
+            let certInfo: CertificateInfo
+            try {
+                certInfo = keyContent
+                    ? certMaker.getCertificateKeyInfo(certContent, keyContent)
+                    : certMaker.getCertificateInfo(certContent)
+            } catch (error) {
+                handleFileError(error)
+                return
+            }
 
             setCertFileInfo(certInfo)
 
@@ -301,10 +361,12 @@ function useCaInterface(props: CaInterfaceProps)
                 {tab === CaTab.UseFiles ?
                     <CAFiles
                         certFile={certFile}
-                        onCertFile={setCertFile}
                         keyFile={keyFile}
+                        onCertFile={setCertFile}
                         onKeyFile={setKeyFile}
                         certInfo={certFileInfo}
+                        certError={certFileError}
+                        keyError={keyFileError}
                         required
                     />
                     : null}

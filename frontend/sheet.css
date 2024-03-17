@@ -104,6 +104,15 @@ summary {
     user-select: none;
 }
 
+p.warning {
+    padding-left: 4px;
+    border-left: 6px solid #ff5;
+    color: #ff5;
+}
+p.warning::before {
+  content: "⚠️ Warning: "
+}
+
 /* Tab bar */
 
 .tabbar {

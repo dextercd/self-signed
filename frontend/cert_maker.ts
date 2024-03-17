@@ -8,6 +8,13 @@ import { MD, mdOptions } from "./md_options"
 import { SANList } from "./san_list"
 import { KeyUsage } from "./key_usage"
 import { ExtKeyUsage } from "./ext_key_usage"
+import { InterfaceErrorCode, InterfaceException } from "./interface_error"
+
+function checkError(status: InterfaceErrorCode)
+{
+    if (status !== InterfaceErrorCode.Success)
+        throw new InterfaceException(status)
+}
 
 function validityString(d: Date)
 {
@@ -138,11 +145,7 @@ export class CertMaker {
         this.setInput(c)
 
         // @ts-ignore
-        const result: number = this.instance.exports.run()
-
-        if (result !== 0) {
-            throw Error("Error generating certificate")
-        }
+        checkError(this.instance.exports.run())
 
         const certPem = new TextDecoder().decode(certFile.data)
         const keyPem = new TextDecoder().decode(keyFile.data)
@@ -173,11 +176,7 @@ export class CertMaker {
         this.directory.dir.contents["cert"] = certFile
 
         // @ts-ignore
-        const result: number = this.instance.exports.cert_info()
-
-        if (result !== 0) {
-            throw Error("Error getting certificate info")
-        }
+        checkError(this.instance.exports.cert_info())
 
         const {isCa, subjectName} = this.readCertGist(this.output.data)
         const certPem = new TextDecoder().decode(certFile.data)
@@ -198,11 +197,7 @@ export class CertMaker {
         this.directory.dir.contents["key"] = keyFile
 
         // @ts-ignore
-        const result: number = this.instance.exports.cert_key_info()
-
-        if (result !== 0) {
-            throw Error("Error getting certificate info")
-        }
+        checkError(this.instance.exports.cert_key_info())
 
         const {isCa, subjectName} = this.readCertGist(this.output.data)
         const certPem = new TextDecoder().decode(certFile.data)
