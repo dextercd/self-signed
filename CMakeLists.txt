@@ -35,36 +35,12 @@ FetchContent_Declare(
     GIT_TAG v3.5.2
 )
 
-set(MBEDTLS_CONFIG_FILE ${CMAKE_CURRENT_SOURCE_DIR}/mbedtls_config.h)
+set(MBEDTLS_CONFIG_FILE ${CMAKE_CURRENT_SOURCE_DIR}/src/mbedtls_config.h)
 set(ENABLE_TESTING OFF)
 set(ENABLE_PROGRAMS OFF)
 FetchContent_MakeAvailable(Mbed_TLS)
 
-# Libraries
+# Targets
 
-add_executable(sign
-    new.cpp
-    interface.cpp
-    interface_key.cpp
-    interface_san.cpp
-    interface_ext_key_usage.cpp
-)
-
-target_link_libraries(sign PRIVATE
-    MbedTLS::mbedx509
-)
-
-if (CMAKE_SYSTEM_PROCESSOR STREQUAL wasm32)
-    target_link_options(sign
-        PUBLIC
-            -mexec-model=reactor
-    )
-    if (BB_PUBLIC_BUILD)
-        target_link_options(sign
-            PUBLIC
-                -Wl,-s
-        )
-    endif()
-endif()
-
+add_subdirectory(src)
 add_subdirectory(frontend)
