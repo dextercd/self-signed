@@ -132,7 +132,7 @@ export function SANListInput({ value, onChange, id }: SANListInputParams)
                 {value.map(([type, value], idx) =>
                     <li key={idx}>
                         <button type="button" onClick={remove(idx)}>Remove</button>
-                        {typeLabel(type)}: {value}
+                        {" "}{typeLabel(type)}: {value}
                     </li>)}
             </ul>
         </div>
