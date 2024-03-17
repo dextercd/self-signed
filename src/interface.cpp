@@ -6,6 +6,7 @@
 #include <mbedtls/x509.h>
 #include <mbedtls/x509_crt.h>
 #include <mbedtls/pem.h>
+#include <mbedtls/base64.h>
 
 #include <stdint.h>
 #include <stdio.h>
@@ -19,6 +20,7 @@
 #include "interface_key_usage.hpp"
 #include "interface_md.hpp"
 #include "interface_san.hpp"
+#include "mbedtls/asn1.h"
 #include "random.hpp"
 #include "write_cert.hpp"
 
@@ -219,16 +221,24 @@ bb::interface_error run()
         }
     }
 
-    // TODO: Increase buffer size if too small
-    // [WASI stderr] Err (-108): [ASN1 - Buffer too small when writing ASN.1 data structure] (null)
-    char output_buffer[8192]{};
+    bb::cstr output_buffer(8196);
+
+new_buffer_retry:
     auto err = mbedtls_x509write_crt_pem(
         &cert,
-        (unsigned char*)output_buffer,
-        sizeof(output_buffer),
+        (unsigned char*)output_buffer.str,
+        output_buffer.len,
         mt_rng,
         nullptr
     );
+
+    if (err == MBEDTLS_ERR_BASE64_BUFFER_TOO_SMALL
+     || err == MBEDTLS_ERR_ASN1_BUF_TOO_SMALL)
+    {
+        output_buffer = bb::cstr(output_buffer.len * 2);
+        goto new_buffer_retry;
+    }
+
     if (err) {
         fprintf(stderr, "Couldn't write cert to PEM format.\n");
         fprintf(stderr, "Err (%d): [%s] %s\n", err, mbedtls_low_level_strerr(err), mbedtls_high_level_strerr(err));
@@ -241,7 +251,7 @@ bb::interface_error run()
         return bb::interface_error::write_cert;
     }
 
-    fputs(output_buffer, out);
+    fputs(output_buffer.str, out);
     fclose(out);
 
     if (!write_key(subject_key)) {
