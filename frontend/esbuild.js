@@ -30,6 +30,7 @@ const commonSettings = {
     target: target,
     minify: !isDev,
     define: defines,
+    charset: 'utf8',
 }
 
 const jsCommonSettings = {
