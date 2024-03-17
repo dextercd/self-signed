@@ -113,7 +113,6 @@ export function SANListInput({ value, onChange, id }: SANListInputParams)
             >
                 <option value={SANType.dns}>{typeLabel(SANType.dns)}</option>
                 <option value={SANType.ip}>{typeLabel(SANType.ip)}</option>
-                <option value={SANType.email}>{typeLabel(SANType.email)}</option>
             </select>
             {" "}
             <input
