@@ -122,6 +122,7 @@ export function SANListInput({ value, onChange, id }: SANListInputParams)
                 value={nextValue}
                 onInput={handleNextValueChange}
                 onKeyPress={checkEnter}
+                placeholder={nextType === SANType.dns ? "localhost" : "127.0.0.1"}
                 {...inputTypeAttributes(nextType)}
             />
             {" "}
