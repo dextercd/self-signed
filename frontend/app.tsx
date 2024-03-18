@@ -492,7 +492,10 @@ function CertificateSettingsForm(props: CertificateSettingsParams)
             {caInterface.ui}
 
             <h2>End Certificate</h2>
-            <p>For web development, you can add your domains to the SAN list and keep the rest on default.</p>
+
+            <p>For web development, you can add your domains to the SAN list and
+            keep everything else on the default settings.</p>
+
             <CertificateInput
                 value={leafSettings}
                 onChange={setLeafSetting}
