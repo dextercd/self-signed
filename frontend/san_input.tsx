@@ -35,12 +35,6 @@ function inputTypeAttributes(type: SANType)
     }
 }
 
-export interface SANListInputParams {
-    value: SANList
-    onChange: (newValue: SANList) => void
-    id?: string
-}
-
 const emailDomainRegex = /@[^@]*$/g
 
 function normaliseValue(type: SANType, value: string)
@@ -55,6 +49,11 @@ function normaliseValue(type: SANType, value: string)
     }
 }
 
+export interface SANListInputParams {
+    value: SANList
+    onChange: (newValue: SANList) => void
+    id?: string
+}
 
 export function SANListInput({ value, onChange, id }: SANListInputParams)
 {
@@ -97,7 +96,7 @@ export function SANListInput({ value, onChange, id }: SANListInputParams)
         }
     }
 
-    const remove = (idx: number) => () => {
+    const remove = (idx: number) => {
         const newValue = [...value]
         newValue.splice(idx, 1)
         onChange(newValue)
@@ -128,13 +127,28 @@ export function SANListInput({ value, onChange, id }: SANListInputParams)
             {" "}
             <button type="button" onClick={handleSubmit}>Add</button>
 
-            <ul>
-                {value.map(([type, value], idx) =>
-                    <li key={idx}>
-                        <button type="button" onClick={remove(idx)}>Remove</button>
-                        {" "}{typeLabel(type)}: {value}
-                    </li>)}
-            </ul>
+            <CurrentList value={value} remove={remove} />
+
         </div>
+    )
+}
+
+interface CurrentListProps {
+    value: SANList
+    remove: (idx: number) => void
+}
+
+function CurrentList(props: CurrentListProps) {
+    if (props.value.length === 0)
+        return null
+
+    return (
+        <ul>
+            {props.value.map(([type, value], idx) =>
+                <li key={idx}>
+                    <button type="button" onClick={() => props.remove(idx)}>Remove</button>
+                    {" "}{typeLabel(type)}: {value}
+                </li>)}
+        </ul>
     )
 }

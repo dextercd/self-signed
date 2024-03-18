@@ -496,6 +496,7 @@ function CertificateSettingsForm(props: CertificateSettingsParams)
             <CertificateInput
                 value={leafSettings}
                 onChange={setLeafSetting}
+                hideAdvanced={true}
             />
 
             <button>Make Certificates</button>

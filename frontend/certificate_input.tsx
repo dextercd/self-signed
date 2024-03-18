@@ -87,6 +87,7 @@ interface CertificateInputProps {
     disabled?: boolean
     lockCa?: boolean
     lockSubject?: boolean
+    hideAdvanced?: boolean
 }
 
 export function CertificateInput(props: CertificateInputProps)
@@ -155,8 +156,8 @@ export function CertificateInput(props: CertificateInputProps)
     const keyGenId = useId()
     const mdId = useId()
 
-    return (
-        <fieldset disabled={props.disabled}>
+    const advancedUi = (
+        <>
             <div class="field">
                 <label for={subjectId}>Subject{props.lockSubject ? " (Locked)" : null}:</label>
                 <input
@@ -165,15 +166,6 @@ export function CertificateInput(props: CertificateInputProps)
                     onInput={onSubjectChange}
                     title="Optional. Comma separated list of element assignments, e.g., C=UK, O=Widget Corp."
                     disabled={props.lockSubject}
-                />
-            </div>
-
-            <div class="field">
-                <label for={sanListId}>SAN List:</label>
-                <SANListInput
-                    id={sanListId}
-                    value={value.sanList}
-                    onChange={onSANListChange}
                 />
             </div>
 
@@ -235,6 +227,28 @@ export function CertificateInput(props: CertificateInputProps)
                     />
                 </div>
             </div>
+        </>
+    )
+
+    return (
+        <fieldset disabled={props.disabled}>
+            <div class="field">
+                <label for={sanListId}>SAN List:</label>
+                <SANListInput
+                    id={sanListId}
+                    value={value.sanList}
+                    onChange={onSANListChange}
+                />
+            </div>
+
+            {props.hideAdvanced ?
+                <details>
+                    <summary>Advanced Settings</summary>
+                    {advancedUi}
+                </details>
+                : <>{advancedUi}</>
+            }
+
         </fieldset>
     )
 }
