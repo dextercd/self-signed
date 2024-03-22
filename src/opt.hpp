@@ -20,7 +20,7 @@ struct opt {
         has_value = true;
     }
 
-    opt(opt&& other)
+    opt(opt&& other) noexcept
     {
         if (!other.has_value)
             return;
@@ -51,12 +51,17 @@ struct opt {
         reset();
     }
 
-    explicit operator bool()
+    explicit operator bool() const
     {
         return has_value;
     }
 
     T& operator*()
+    {
+        return data;
+    }
+
+    const T& operator*() const
     {
         return data;
     }
