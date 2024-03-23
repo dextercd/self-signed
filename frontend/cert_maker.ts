@@ -71,7 +71,7 @@ export class CertMaker {
             directory,
         ]
 
-        const wasi = new WASI(args, env, fds, {debug: true})
+        const wasi = new WASI(args, env, fds, {debug: DEBUG})
         let certMaker = new CertMaker(
             wasi,
             input,
