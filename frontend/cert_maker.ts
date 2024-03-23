@@ -1,5 +1,5 @@
 import { ConsoleStdout, File, OpenFile, PreopenDirectory, WASI } from "@bjorn3/browser_wasi_shim"
-import { Comms } from "./comms"
+import { WComms } from "./wcomms"
 
 import signPath from "sign.wasm"
 import { KeyOption, keyOptions } from "./key_options"
@@ -104,7 +104,7 @@ export class CertMaker {
         return CertMaker.pendingCertMaker
     }
 
-    private setInput(c: Comms)
+    private setInput(c: WComms)
     {
         this.input.truncate()
         this.input.data = c.complete()
@@ -125,7 +125,7 @@ export class CertMaker {
         this.directory.dir.contents["cert"] = certFile
         this.directory.dir.contents["key"] = keyFile
 
-        const c = new Comms()
+        const c = new WComms()
         c.addString(settings.issuerName)
         c.addString(cleanSubject(settings))
         c.addBool(settings.isCa)

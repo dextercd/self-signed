@@ -12,7 +12,7 @@
 #include <stdio.h>
 
 #include "cert.hpp"
-#include "comms.hpp"
+#include "rcomms.hpp"
 #include "cstr.hpp"
 #include "interface_error.hpp"
 #include "interface_ext_key_usage.hpp"
@@ -27,7 +27,7 @@
 bb::opt<bb::Key> read_key();
 bool write_key(mbedtls_pk_context* pk);
 
-bb::opt<bb::gen_key_type> read_key_type(bb::comms& c)
+bb::opt<bb::gen_key_type> read_key_type(bb::rcomms& c)
 {
     auto value = c.read_uint();
     if (!value || *value > (uint32_t)bb::gen_key_type::max_enum_value)
@@ -36,7 +36,7 @@ bb::opt<bb::gen_key_type> read_key_type(bb::comms& c)
     return (bb::gen_key_type)*value;
 }
 
-bb::opt<bb::md_type> read_md_type(bb::comms& c)
+bb::opt<bb::md_type> read_md_type(bb::rcomms& c)
 {
     auto value = c.read_uint();
     if (!value || *value > (uint32_t)bb::md_type::max_enum_value)
@@ -48,7 +48,7 @@ bb::opt<bb::md_type> read_md_type(bb::comms& c)
 [[clang::export_name("run")]]
 bb::interface_error run()
 {
-    auto cc = bb::comms::open("input");
+    auto cc = bb::rcomms::open("input");
     if (!cc) {
         fprintf(stderr, "Couldn't open input file.\n");
         return bb::interface_error::read_input;
@@ -264,7 +264,7 @@ new_buffer_retry:
 
 bb::opt<bb::Cert> read_cert()
 {
-    auto cc = bb::comms::open("cert");
+    auto cc = bb::rcomms::open("cert");
     if (!cc) {
         fprintf(stderr, "Couldn't open cert file.\n");
         return {};
@@ -295,7 +295,7 @@ bb::opt<bb::Cert> read_cert()
 
 bb::opt<bb::Key> read_key()
 {
-    auto cc = bb::comms::open("key");
+    auto cc = bb::rcomms::open("key");
     if (!cc) {
         fprintf(stderr, "Couldn't open key file.\n");
         return {};

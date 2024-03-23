@@ -1,4 +1,4 @@
-export class Comms {
+export class WComms {
     data: Uint8Array = new Uint8Array
     size: number = 0
 

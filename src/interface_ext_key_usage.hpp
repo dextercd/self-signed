@@ -1,7 +1,7 @@
 #ifndef BB_INTERFACE_EXT_KEY_USAGE_HPP
 #define BB_INTERFACE_EXT_KEY_USAGE_HPP
 
-#include "comms.hpp"
+#include "rcomms.hpp"
 #include "uniqptr.hpp"
 
 #include <mbedtls/asn1.h>
@@ -18,7 +18,7 @@ enum [[using clang: flag_enum, enum_extensibility(closed)]] ext_key_usage {
     any = 1 << 6,
 };
 
-inline bool cread(comms& c, ext_key_usage* out)
+inline bool cread(rcomms& c, ext_key_usage* out)
 {
     uint32_t raw;
     if (!cread(c, &raw))
@@ -54,7 +54,7 @@ struct ExtKeyUsageListDeleter {
 
 using ExtKeyUsageList = uniqptr<mbedtls_asn1_sequence, ExtKeyUsageListDeleter>;
 
-bool cread(comms& c, ExtKeyUsageList* out);
+bool cread(rcomms& c, ExtKeyUsageList* out);
 
 } // namespace bb
 

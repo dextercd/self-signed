@@ -1,12 +1,12 @@
 #include <mbedtls/asn1.h>
 #include <mbedtls/oid.h>
 
-#include "comms.hpp"
+#include "rcomms.hpp"
 #include "interface_ext_key_usage.hpp"
 
 namespace bb {
 
-bool cread(comms& c, ExtKeyUsageList* out)
+bool cread(rcomms& c, ExtKeyUsageList* out)
 {
     ext_key_usage key_usage;
     if (!cread(c, &key_usage))

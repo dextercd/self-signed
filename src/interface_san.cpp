@@ -1,6 +1,6 @@
 #include <mbedtls/x509_crt.h>
 
-#include "comms.hpp"
+#include "rcomms.hpp"
 #include "mbedtls/x509.h"
 #include "opt.hpp"
 #include "uniqptr.hpp"
@@ -9,7 +9,7 @@
 
 namespace {
 
-bb::opt<bb::san_type> read_san_type(bb::comms& c)
+bb::opt<bb::san_type> read_san_type(bb::rcomms& c)
 {
     auto value = c.read_uint();
     if (!value || *value > (uint32_t)bb::san_type::max_enum_value)
@@ -34,7 +34,7 @@ int get_san_type(bb::san_type san_type)
 
 namespace bb {
 
-opt<OwningSanList> read_san_list(bb::comms& c)
+opt<OwningSanList> read_san_list(bb::rcomms& c)
 {
     OwningSanList start;
     mbedtls_x509_san_list** tail = &start.ptr;

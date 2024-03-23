@@ -5,7 +5,7 @@
 
 #include <mbedtls/x509.h>
 
-#include "comms.hpp"
+#include "rcomms.hpp"
 
 namespace bb {
 
@@ -21,7 +21,7 @@ enum [[using clang: flag_enum, enum_extensibility(closed)]] key_usage {
     decipher_only = MBEDTLS_X509_KU_DECIPHER_ONLY,
 };
 
-inline bool cread(comms& c, key_usage* out)
+inline bool cread(rcomms& c, key_usage* out)
 {
     uint32_t raw;
     if (!cread(c, &raw))

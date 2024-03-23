@@ -1,5 +1,5 @@
-#ifndef BB_COMMS_HPP
-#define BB_COMMS_HPP
+#ifndef BB_RCOMMS_HPP
+#define BB_RCOMMS_HPP
 
 #include <stdint.h>
 #include <stdio.h>
@@ -10,32 +10,32 @@
 
 namespace bb {
 
-class comms {
+class rcomms {
     FILE* file = nullptr;
 
 public:
-    comms() = default;
+    rcomms() = default;
 
-    comms(comms&& other)
+    rcomms(rcomms&& other)
         : file{other.file}
     {
         other.file = nullptr;
     }
 
-    ~comms()
+    ~rcomms()
     {
         if (file)
             fclose(file);
     }
 
     [[nodiscard]]
-    static opt<comms> open(const char* path)
+    static opt<rcomms> open(const char* path)
     {
         auto f = fopen(path, "rb");
         if (!f)
             return {};
 
-        comms c;
+        rcomms c;
         c.file = f;
         return c;
     }
@@ -75,7 +75,7 @@ public:
     }
 };
 
-inline bool cread(comms& c, bool* out)
+inline bool cread(rcomms& c, bool* out)
 {
     if (auto opt = c.read_bool()) {
         *out = *opt;
@@ -84,7 +84,7 @@ inline bool cread(comms& c, bool* out)
     return false;
 }
 
-inline bool cread(comms& c, uint32_t* out)
+inline bool cread(rcomms& c, uint32_t* out)
 {
     if (auto opt = c.read_uint()) {
         *out = *opt;
@@ -93,7 +93,7 @@ inline bool cread(comms& c, uint32_t* out)
     return false;
 }
 
-inline bool cread(comms& c, int32_t* out)
+inline bool cread(rcomms& c, int32_t* out)
 {
     if (auto opt = c.read_uint()) {
         *out = *opt;
@@ -102,7 +102,7 @@ inline bool cread(comms& c, int32_t* out)
     return false;
 }
 
-inline bool cread(comms& c, cstr* out)
+inline bool cread(rcomms& c, cstr* out)
 {
     if (auto opt = c.read_string()) {
         *out = *opt;
@@ -112,7 +112,7 @@ inline bool cread(comms& c, cstr* out)
 }
 
 template<class T>
-bool cread(comms& c, opt<T>* out)
+bool cread(rcomms& c, opt<T>* out)
 {
     bool has_value{};
     if (!cread(c, &has_value))

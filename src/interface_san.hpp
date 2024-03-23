@@ -3,7 +3,7 @@
 
 #include <mbedtls/x509_crt.h>
 
-#include "comms.hpp"
+#include "rcomms.hpp"
 #include "opt.hpp"
 #include "uniqptr.hpp"
 
@@ -31,7 +31,7 @@ struct OwningSanListDeleter {
 
 using OwningSanList = uniqptr<mbedtls_x509_san_list, OwningSanListDeleter>;
 
-opt<OwningSanList> read_san_list(comms& c);
+opt<OwningSanList> read_san_list(rcomms& c);
 
 } // namespace bb
 
