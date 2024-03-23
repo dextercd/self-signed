@@ -9,6 +9,7 @@ import { SANList } from "./san_list"
 import { KeyUsage } from "./key_usage"
 import { ExtKeyUsage } from "./ext_key_usage"
 import { InterfaceErrorCode, InterfaceException } from "./interface_error"
+import { RComms } from "./rcomms"
 
 function checkError(status: InterfaceErrorCode)
 {
@@ -110,26 +111,28 @@ export class CertMaker {
         this.input.data = c.complete()
     }
 
-    makeCertificate(settings: CertificateSettings): MakeCertificateResult
+    makeCertificate(settings: CertificateSettings): CertificateKeyInfo
     {
         this.output.truncate()
         const certFile = new File([], {readonly: false})
         let keyFile: File
-
-        if (settings.signMethod === "selfsigned") {
-            keyFile = new File([], {readonly: false})
-        } else {
-            keyFile = this.binaryFile(new TextEncoder().encode(settings.signMethod.pem))
-        }
-
-        this.directory.dir.contents["cert"] = certFile
-        this.directory.dir.contents["key"] = keyFile
 
         const c = new WComms()
         c.addString(settings.issuerName)
         c.addString(cleanSubject(settings))
         c.addBool(settings.isCa)
         c.addBool(settings.signMethod === "selfsigned")
+
+        if (settings.signMethod === "selfsigned") {
+            keyFile = new File([], {readonly: false})
+            c.addString("") // AKID
+        } else {
+            keyFile = this.binaryFile(new TextEncoder().encode(settings.signMethod.pem))
+            c.addByteArray(settings.signMethod.akid)
+        }
+
+        this.directory.dir.contents["cert"] = certFile
+        this.directory.dir.contents["key"] = keyFile
 
         c.addUint32(settings.sanList.length)
         for (const [type, value] of settings.sanList) {
@@ -147,25 +150,16 @@ export class CertMaker {
         // @ts-ignore
         checkError(this.instance.exports.run())
 
-        const certPem = new TextDecoder().decode(certFile.data)
         const keyPem = new TextDecoder().decode(keyFile.data)
 
-        return {certPem, keyPem}
+        return {...this.resultCert(), keyPem}
     }
 
     private binaryFile(certificateData: ArrayBuffer)
     {
-        const c = new Comms()
+        const c = new WComms()
         c.addByteArray(certificateData)
         return new File(c.complete(), {readonly: false})
-    }
-
-    private readCertGist(buffer: ArrayBuffer)
-    {
-        const out = new Uint8Array(buffer)
-        const isCa = out[0] !== 0
-        const subjectName = new TextDecoder().decode(this.output.data.slice(1))
-        return {isCa, subjectName}
     }
 
     getCertificateInfo(certificateData: ArrayBuffer): CertificateInfo
@@ -178,16 +172,10 @@ export class CertMaker {
         // @ts-ignore
         checkError(this.instance.exports.cert_info())
 
-        const {isCa, subjectName} = this.readCertGist(this.output.data)
-        const certPem = new TextDecoder().decode(certFile.data)
-        return {
-            isCa,
-            subjectName,
-            certPem,
-        }
+        return this.resultCert()
     }
 
-    getCertificateKeyInfo(certificateData: ArrayBuffer, keyData: ArrayBuffer): CertificateInfo
+    getCertificateKeyInfo(certificateData: ArrayBuffer, keyData: ArrayBuffer): CertificateKeyInfo
     {
         this.output.truncate()
 
@@ -199,19 +187,33 @@ export class CertMaker {
         // @ts-ignore
         checkError(this.instance.exports.cert_key_info())
 
-        const {isCa, subjectName} = this.readCertGist(this.output.data)
-        const certPem = new TextDecoder().decode(certFile.data)
         const keyPem = new TextDecoder().decode(keyFile.data)
         return {
+            ...this.resultCert(),
+            keyPem,
+        }
+    }
+
+    private resultCert(): CertificateInfo
+    {
+        const certFile = this.directory.dir.contents["cert"] as File
+        const r = new RComms(certFile.data)
+
+        const certPem = r.read_string()
+        const isCa = r.read_bool()
+        const subjectName = r.read_string()
+        const skid = r.read_bytes()
+
+        return {
+            certPem,
             isCa,
             subjectName,
-            certPem,
-            keyPem,
+            skid,
         }
     }
 }
 
-type SignMethod = "selfsigned" | { pem: string }
+type SignMethod = "selfsigned" | { pem: string, akid: ArrayBuffer }
 
 export interface CertificateSettings {
     issuerName: string
@@ -226,14 +228,13 @@ export interface CertificateSettings {
     isCa: boolean
 }
 
-export interface MakeCertificateResult {
-    certPem: string
-    keyPem: string
-}
-
-export interface CertificateInfo {
+export type CertificateInfo = {
     isCa: boolean
     subjectName: string
     certPem: string
-    keyPem?: string
+    skid: ArrayBuffer
+}
+
+export type CertificateKeyInfo = CertificateInfo & {
+    keyPem: string
 }

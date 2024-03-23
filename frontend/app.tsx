@@ -4,7 +4,7 @@ import { saveAs } from "file-saver"
 import { JSX } from "preact"
 import { useEffect, useId, useRef, useState } from "preact/hooks"
 
-import { CertMaker, CertificateInfo, CertificateSettings } from "./cert_maker"
+import { CertMaker, CertificateInfo, CertificateKeyInfo, CertificateSettings } from "./cert_maker"
 import { CertInputValue, CertificateInput } from "./certificate_input"
 import { ExtKeyUsage } from "./ext_key_usage"
 import { useIsClient } from "./is_client"
@@ -175,13 +175,7 @@ enum CaTab {
     None,
 }
 
-interface CertSignInfo {
-    subjectName: string
-    certPem: string
-    keyPem: string
-}
-
-type SigningInfo = CertSignInfo | "selfsigned"
+type SigningInfo = CertificateKeyInfo | "selfsigned"
 
 interface CaInterfaceProps {
     caCertSettings: CertInputValue
@@ -191,62 +185,48 @@ interface CaInterfaceProps {
 function useCaInterface(props: CaInterfaceProps)
 {
     const [pemDataFor, setPemDataFor] = useState<CertInputValue>()
-    const [confCertificatePem, setConfCertificatePem] = useState<string>()
-    const [confKeyPem, setConfKeyPem] = useState<string>()
+    const [confCertInfo, setConfCertInfo] = useState<CertificateKeyInfo>()
 
     const settingsLocked = pemDataFor === props.caCertSettings
-
-    const [fileCertificatePem, setFileCertificatePem] = useState<string>()
-    const [fileKeyPem, setFileKeyPem] = useState<string>()
 
     const [certFile, setCertFile] = useState<File>()
     const [keyFile, setKeyFile] = useState<File>()
     const [certFileError, setCertFileError] = useState<string>()
     const [keyFileError, setKeyFileError] = useState<string>()
 
-    const [certFileInfo, setCertFileInfo] = useState<CertificateInfo>()
+    const [certFileInfo, setCertFileInfo] = useState<CertificateInfo | CertificateKeyInfo>()
 
     const [tab, setTab] = useState(CaTab.Configure)
 
     const getCertificate = (certMaker: CertMaker): SigningInfo => {
         if (tab === CaTab.Configure) {
-            let certPem = confCertificatePem
-            let keyPem = confKeyPem
+            let certInfo = confCertInfo
             if (pemDataFor !== props.caCertSettings) {
-                const caCert = certMaker.makeCertificate({
+                certInfo = certMaker.makeCertificate({
                     ...props.caCertSettings,
                     issuerName: props.caCertSettings.subjectName,
                     signMethod: "selfsigned",
                 })
 
-                setConfCertificatePem(caCert.certPem)
-                setConfKeyPem(caCert.keyPem)
+                setConfCertInfo(certInfo)
                 setPemDataFor(props.caCertSettings)
-
-                certPem = caCert.certPem
-                keyPem = caCert.keyPem
             }
 
-            if (certPem === undefined || keyPem === undefined) {
+            if (certInfo === undefined) {
                 throw Error("Assertion failed")
             }
 
-            return {
-                subjectName: props.caCertSettings.subjectName,
-                certPem: certPem,
-                keyPem: keyPem,
-            }
+            return certInfo
         }
 
         if (tab === CaTab.UseFiles) {
-            if (!certFileInfo || !fileCertificatePem || !fileKeyPem)
+            if (!certFileInfo)
                 throw Error("Missing or bad CA files")
 
-            return {
-                subjectName: certFileInfo.subjectName,
-                certPem: fileCertificatePem,
-                keyPem: fileKeyPem
-            }
+            if (!("keyPem" in certFileInfo))
+                throw Error("No key")
+
+            return certFileInfo
         }
 
         if (tab === CaTab.None) {
@@ -279,8 +259,6 @@ function useCaInterface(props: CaInterfaceProps)
 
     useEffect(() => {
         setCertFileInfo(undefined)
-        setFileCertificatePem(undefined)
-        setFileKeyPem(undefined)
         setCertFileError(undefined)
         setKeyFileError(undefined)
 
@@ -297,7 +275,7 @@ function useCaInterface(props: CaInterfaceProps)
 
             if (ignore) return
 
-            let certInfo: CertificateInfo
+            let certInfo: CertificateInfo | CertificateKeyInfo
             try {
                 certInfo = keyContent
                     ? certMaker.getCertificateKeyInfo(certContent, keyContent)
@@ -308,10 +286,6 @@ function useCaInterface(props: CaInterfaceProps)
             }
 
             setCertFileInfo(certInfo)
-
-            setFileCertificatePem(certInfo.certPem)
-            if (certInfo.keyPem)
-                setFileKeyPem(certInfo.keyPem)
         })
 
         return () => { ignore = true }
@@ -463,7 +437,10 @@ function CertificateSettingsForm(props: CertificateSettingsParams)
 
             if (signingInfo !== "selfsigned") {
                 settings.issuerName = signingInfo.subjectName
-                settings.signMethod = {pem: signingInfo.keyPem}
+                settings.signMethod = {
+                    pem: signingInfo.keyPem,
+                    akid: signingInfo.skid,
+                }
             }
 
             const certData = certMaker.makeCertificate(settings)

@@ -29,6 +29,8 @@ enum class [[clang::enum_extensibility(closed)]] interface_error
     generate_key,
     cert_info,
     key_mismatch,
+    convert_pem,
+    open_file,
 
 };
 

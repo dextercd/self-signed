@@ -22,9 +22,12 @@
 #include "interface_san.hpp"
 #include "mbedtls/asn1.h"
 #include "random.hpp"
+#include "wcomms.hpp"
 #include "write_cert.hpp"
+#include "cert_ext.hpp"
 
 bb::opt<bb::Key> read_key();
+bb::interface_error write_cert(mbedtls_x509_crt* cert);
 bool write_key(mbedtls_pk_context* pk);
 
 bb::opt<bb::gen_key_type> read_key_type(bb::rcomms& c)
@@ -77,7 +80,13 @@ bb::interface_error run()
     }
 
     if (!bb::cread(c, &self_signed)) {
-        fprintf(stderr, "Couldn't read is ca flag.\n");
+        fprintf(stderr, "Couldn't read is self-signed flag.\n");
+        return bb::interface_error::read_input;
+    }
+
+    bb::cstr akid;
+    if (!bb::cread(c, &akid)) {
+        fprintf(stderr, "Couldn't read AKID.\n");
         return bb::interface_error::read_input;
     }
 
@@ -205,8 +214,8 @@ bb::interface_error run()
         return bb::interface_error::cert_set_skid;
     }
 
-    if (!self_signed) {
-        if (mbedtls_x509write_crt_set_authority_key_identifier(&cert)) {
+    if (akid.len) {
+        if (bb::set_akid(&cert, (unsigned  char*)akid.str, akid.len)) {
             fprintf(stderr, "Couldn't set authority key identifier.\n");
             return bb::interface_error::cert_set_akid;
         }
@@ -221,45 +230,45 @@ bb::interface_error run()
         }
     }
 
-    bb::cstr output_buffer(8196);
+    bb::cstr der_buffer(8196);
 
 new_buffer_retry:
-    auto err = mbedtls_x509write_crt_pem(
+    auto der_length = mbedtls_x509write_crt_der(
         &cert,
-        (unsigned char*)output_buffer.str,
-        output_buffer.len,
+        (unsigned char*)der_buffer.str,
+        der_buffer.len,
         mt_rng,
         nullptr
     );
 
-    if (err == MBEDTLS_ERR_BASE64_BUFFER_TOO_SMALL
-     || err == MBEDTLS_ERR_ASN1_BUF_TOO_SMALL)
-    {
-        output_buffer = bb::cstr(output_buffer.len * 2);
-        goto new_buffer_retry;
-    }
+    if (der_length < 0) {
+        if (der_length == MBEDTLS_ERR_BASE64_BUFFER_TOO_SMALL
+         || der_length == MBEDTLS_ERR_ASN1_BUF_TOO_SMALL)
+        {
+            der_buffer = bb::cstr(der_buffer.len * 2);
+            goto new_buffer_retry;
+        }
 
-    if (err) {
-        fprintf(stderr, "Couldn't write cert to PEM format.\n");
-        fprintf(stderr, "Err (%d): [%s] %s\n", err, mbedtls_low_level_strerr(err), mbedtls_high_level_strerr(err));
+        fprintf(stderr, "Couldn't serialise certificate.\n");
+        fprintf(stderr, "Err (%d): [%s] %s\n", der_length, mbedtls_low_level_strerr(der_length), mbedtls_high_level_strerr(der_length));
         return bb::interface_error::generate_cert;
     }
 
-    auto out = fopen("cert", "wb");
-    if (!out) {
-        fprintf(stderr, "Couldn't open cert file.\n");
-        return bb::interface_error::write_cert;
-    }
+    auto der = (unsigned char*)der_buffer.str + der_buffer.len - der_length;
 
-    fputs(output_buffer.str, out);
-    fclose(out);
+    bb::Cert out_cert;
+    auto parse_err = mbedtls_x509_crt_parse_der(&out_cert, der, der_length);
+    if (parse_err) {
+        fprintf(stderr, "Err (%d): [%s] %s\n", parse_err, mbedtls_low_level_strerr(parse_err), mbedtls_high_level_strerr(parse_err));
+        return bb::interface_error::read_cert;
+    }
 
     if (!write_key(subject_key)) {
         fprintf(stderr, "Couldn't write key.\n");
         return bb::interface_error::write_key;
     }
 
-    return bb::interface_error::success;
+    return write_cert(&out_cert);
 }
 
 bb::opt<bb::Cert> read_cert()
@@ -322,76 +331,6 @@ bb::opt<bb::Key> read_key()
     return key;
 }
 
-struct cert_info {
-    char dnstr[1024];
-    int dnlength;
-    bool is_ca;
-};
-
-bb::opt<cert_info> get_cert_info(mbedtls_x509_crt* cert)
-{
-    cert_info info{};
-
-    info.dnlength = mbedtls_x509_dn_gets(info.dnstr, sizeof(info.dnstr), &cert->subject);
-    if (info.dnlength < 0) {
-        fprintf(stderr, "Couldn't get certificate subject");
-        return {};
-    }
-
-    info.is_ca = cert->private_ext_types & MBEDTLS_X509_EXT_BASIC_CONSTRAINTS && cert->private_ca_istrue;
-
-    return info;
-}
-
-bool write_cert_info(cert_info* info)
-{
-    auto out = fopen("result", "wb");
-    if (!out) {
-        fprintf(stderr, "Couldn't open results file.\n");
-        return 1;
-    }
-
-    char is_ca_ch = !!info->is_ca;
-    fwrite(&is_ca_ch, 1, 1, out);
-    fwrite(info->dnstr, 1, info->dnlength, out);
-    fclose(out);
-
-    return true;
-}
-
-bool write_cert(mbedtls_x509_crt* cert)
-{
-    auto pem_buffer = bb::cstr(28 * 2 + cert->raw.len * 2);
-    auto pem_buffer_len = pem_buffer.len;
-
-    auto pem_result = mbedtls_pem_write_buffer(
-        "-----BEGIN CERTIFICATE-----",
-        "-----END CERTIFICATE-----",
-        cert->raw.p,
-        cert->raw.len,
-        (unsigned char*)pem_buffer.str,
-        pem_buffer_len,
-        &pem_buffer_len
-    );
-
-    if (pem_result != 0) {
-        fprintf(stderr, "Couldn't turn cert DER into PEM.\n");
-        return false;
-    }
-
-    auto out = fopen("cert", "wb");
-    if (!out) {
-        fprintf(stderr, "Couldn't open cert file.\n");
-        return false;
-    }
-
-    auto len_without_null = pem_buffer_len - 1;
-    fwrite(pem_buffer.str, 1, len_without_null, out);
-    fclose(out);
-
-    return true;
-}
-
 [[clang::export_name("cert_info")]]
 bb::interface_error cert_info()
 {
@@ -407,23 +346,7 @@ bb::interface_error cert_info()
     while (last_cert->next)
         last_cert = last_cert->next;
 
-    auto cert_info = get_cert_info(last_cert);
-    if (!cert_info) {
-        fprintf(stderr, "Couldn't get cert info.\n");
-        return bb::interface_error::cert_info;
-    }
-
-    if (!write_cert_info(&cert_info.data)) {
-        fprintf(stderr, "Couldn't write cert info.\n");
-        return bb::interface_error::write_cert_info;
-    }
-
-    if (!write_cert(last_cert)) {
-        fprintf(stderr, "Couldn't write cert.\n");
-        return bb::interface_error::write_cert;
-    }
-
-    return bb::interface_error::success;
+    return write_cert(last_cert);
 }
 
 [[clang::export_name("cert_key_info")]]
@@ -453,26 +376,56 @@ bb::interface_error cert_key_info()
         return bb::interface_error::key_mismatch;
     }
 
-    auto cert_info = get_cert_info(cert);
-    if (!cert_info) {
-        fprintf(stderr, "Couldn't get cert info.\n");
-        return bb::interface_error::cert_info;
-    }
-
-    if (!write_cert_info(&cert_info.data)) {
-        fprintf(stderr, "Couldn't write cert info.\n");
-        return bb::interface_error::write_cert_info;
-    }
-
-    if (!write_cert(cert)) {
-        fprintf(stderr, "Couldn't write cert.\n");
-        return bb::interface_error::write_cert;
-    }
-
     if (!write_key(&key)) {
         fprintf(stderr, "Couldn't write key.\n");
         return bb::interface_error::write_key;
     }
+
+    return write_cert(cert);
+}
+
+bb::interface_error write_cert(mbedtls_x509_crt* cert)
+{
+    auto pem_buffer = bb::cstr(28 * 2 + cert->raw.len * 2);
+    auto pem_buffer_len = pem_buffer.len;
+
+    auto pem_result = mbedtls_pem_write_buffer(
+        "-----BEGIN CERTIFICATE-----\n",
+        "-----END CERTIFICATE-----\n",
+        cert->raw.p,
+        cert->raw.len,
+        (unsigned char*)pem_buffer.str,
+        pem_buffer_len,
+        &pem_buffer_len
+    );
+
+    if (pem_result != 0) {
+        fprintf(stderr, "Couldn't turn cert DER into PEM.\n");
+        return bb::interface_error::convert_pem;
+    }
+
+    auto len_without_null = pem_buffer_len - 1;
+
+    char dnstr[1024];
+    int dnlength = mbedtls_x509_dn_gets(dnstr, sizeof(dnstr), &cert->subject);
+    if (dnlength < 0) {
+        fprintf(stderr, "Couldn't get certificate subject.\n");
+        return bb::interface_error::cert_info;
+    }
+
+    bool is_ca = cert->private_ext_types & MBEDTLS_X509_EXT_BASIC_CONSTRAINTS && cert->private_ca_istrue;
+
+    auto out_ = bb::wcomms::open("cert");
+    if (!out_) {
+        fprintf(stderr, "Couldn't open cert file.\n");
+        return bb::interface_error::open_file;
+    }
+    auto& out = *out_;
+
+    out.write_bytelen(pem_buffer.str, len_without_null);
+    out.write_bool(is_ca);
+    out.write_bytelen(dnstr, dnlength);
+    out.write_bytelen(cert->subject_key_id.p, cert->subject_key_id.len);
 
     return bb::interface_error::success;
 }

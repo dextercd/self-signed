@@ -24,6 +24,8 @@ export enum InterfaceErrorCode
     GenerateKey,
     CertInfo,
     KeyMismatch,
+    ConvertPem,
+    OpenFile,
 }
 
 export class InterfaceException extends Error {
