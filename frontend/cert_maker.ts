@@ -118,8 +118,10 @@ export class CertMaker {
         let keyFile: File
 
         const c = new WComms()
-        c.addString(settings.issuerName)
-        c.addString(cleanSubject(settings))
+        const subject = cleanSubject(settings)
+        c.addString(settings.issuerName ?? subject)
+        c.addString(subject)
+
         c.addBool(settings.isCa)
         c.addBool(settings.signMethod === "selfsigned")
 
@@ -216,7 +218,7 @@ export class CertMaker {
 type SignMethod = "selfsigned" | { pem: string, akid: ArrayBuffer }
 
 export interface CertificateSettings {
-    issuerName: string
+    issuerName?: string
     subjectName: string
     signMethod: SignMethod
     sanList: SANList

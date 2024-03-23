@@ -431,8 +431,8 @@ function CertificateSettingsForm(props: CertificateSettingsParams)
 
             const settings: CertificateSettings = {
                 ...leafSettings,
-                issuerName: leafSettings.subjectName,
                 signMethod: "selfsigned",
+                issuerName: undefined,
             }
 
             if (signingInfo !== "selfsigned") {
