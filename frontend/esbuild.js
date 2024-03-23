@@ -30,7 +30,7 @@ const commonSettings = {
     target: target,
     minify: !isDev,
     define: defines,
-    charset: 'utf8',
+    charset: "utf8",
 }
 
 const jsCommonSettings = {
@@ -54,7 +54,7 @@ async function makeBundle()
         bundle: true,
         platform: "browser",
         outdir: outDir,
-        entryNames: '[dir]/[name]-[hash]',
+        entryNames: "[dir]/[name]-[hash]",
         metafile: true,
     })
 
@@ -109,20 +109,17 @@ async function makeIndexHtml()
 
     let indexHtml = await fs.readFile("index.html", "utf-8")
     indexHtml = indexHtml.replace(
-        '<div id="app"></div>',
+        "[[BODY]]",
         `<div id="app">${prerender}</div>`,
     )
+
     indexHtml = indexHtml.replace(
-        '<link rel="stylesheet" href="sheet.css">',
-        `<style>${css}</style>`,
-    )
-    indexHtml = indexHtml.replace(
-        '<link rel="preload" as="fetch" crossorigin="anonymous" href="sign.wasm">',
-        `<link rel="preload" as="fetch" crossorigin="anonymous" href="${bundleResult.signWasm}">`,
-    )
-    indexHtml = indexHtml.replace(
-        '<script async src="index.js"></script>',
-        `<script async src="${bundleResult.indexJs}"></script>`,
+        "[[HEAD]]",
+        [
+            `<style>${css}</style>`,
+            `<script async src="${bundleResult.indexJs}"></script>`,
+            `<link rel="preload" as="fetch" crossorigin="anonymous" href="${bundleResult.signWasm}">`,
+        ].join("\n")
     )
 
     await fs.writeFile(path.join(outDir, "index.html"), indexHtml)

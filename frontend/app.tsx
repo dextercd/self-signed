@@ -535,6 +535,8 @@ export function App() {
 
     return (
         <div>
+            <form id="disassociate-form" autocomplete="off" style="display:none"></form>
+
             <CertificateSettingsForm
                 onResult={onDownload}
                 onError={setError}
