@@ -528,7 +528,7 @@ export function App() {
             writer.addFile(`${name}/ca_cert.crt`, new TextEncoder().encode(result.caCert))
 
         if (result.caKey)
-            writer.addFile(`${name}/ca_key.key`, new TextEncoder().encode(result.caKey))
+            writer.addFile(`${name}/ca_cert.key`, new TextEncoder().encode(result.caKey))
 
         saveAs(writer.complete(), `${name}.zip`)
     }
