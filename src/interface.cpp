@@ -209,16 +209,16 @@ bb::interface_error run()
     mbedtls_x509write_crt_set_issuer_key(&cert, authority_key);
     mbedtls_x509write_crt_set_subject_key(&cert, subject_key);
 
-    if (mbedtls_x509write_crt_set_subject_key_identifier(&cert)) {
-        fprintf(stderr, "Couldn't set subject key identifier.\n");
-        return bb::interface_error::cert_set_skid;
-    }
-
     if (akid.len) {
         if (bb::set_akid(&cert, (unsigned  char*)akid.str, akid.len)) {
             fprintf(stderr, "Couldn't set authority key identifier.\n");
             return bb::interface_error::cert_set_akid;
         }
+    }
+
+    if (mbedtls_x509write_crt_set_subject_key_identifier(&cert)) {
+        fprintf(stderr, "Couldn't set subject key identifier.\n");
+        return bb::interface_error::cert_set_skid;
     }
 
     mbedtls_x509write_crt_set_md_alg(&cert, bb::get_md(md_type));
