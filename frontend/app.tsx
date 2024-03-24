@@ -395,8 +395,8 @@ function CertificateSettingsForm(props: CertificateSettingsParams)
     const [caCertSettings, setCaCertSettings] = useState<CertInputValue>({
         // AAA Here is to put it at the top of an alphabetically ordered
         // certificate list. I want these certificates to be easy to find and
-        // remove after intalling them.
-        subjectName: "C=NL, O=AAASELFSIGNED, OU=dexter.döpping.eu/self-signed, CN=ROOT CA",
+        // remove after installing them.
+        subjectName: "C=NL, O=AAASELFSIGNED, OU=dexter.döpping.eu/self-signed, CN=AAATESTCA",
         sanList: [],
         keyGen: ecP256,
         md: sha2_256,
