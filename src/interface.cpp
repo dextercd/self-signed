@@ -142,7 +142,7 @@ bb::interface_error run()
 
     mbedtls_x509write_crt_set_version(&cert, MBEDTLS_X509_CRT_VERSION_3);
 
-    unsigned char serial_number[MBEDTLS_X509_RFC5280_MAX_SERIAL_LEN];
+    unsigned char serial_number[16];
     fill_random(serial_number, sizeof(serial_number));
 
     if (mbedtls_x509write_crt_set_serial_raw(&cert, serial_number, sizeof(serial_number))) {
