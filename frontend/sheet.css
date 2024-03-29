@@ -1,3 +1,19 @@
+/* Imports */
+
+/* Other built-in themes I kind of like:
+    an-old-hope
+    atom-one-dark-reasonable
+    devibeans
+    felipec
+    github-dark
+    ir-black
+    nnfx-dark
+    srcery
+    sunburst
+    tomorrow-night-bright
+    vs2015 */
+@import "highlight.js/styles/tomorrow-night-bright.css";
+
 /* Reset */
 *, ::before, ::after {
     box-sizing: border-box;
@@ -28,9 +44,23 @@ html {
     flex: 1;
 }
 
-header {
-    background-color: #111;
-    padding: 10px 20px;
+.doc {
+    align-self: center;
+    max-width: 780px;
+    width: 100%;
+    padding: 0px 5px 20px;
+    margin: 10px 0px;
+    flex: 1;
+
+    background-color: #671028;
+    border: 1px solid black;
+}
+
+@media (max-width: 780px) {
+    .doc {
+        border-left: 0px;
+        border-right: 0px;
+    }
 }
 
 footer {
@@ -44,6 +74,17 @@ footer {
 
 footer a {
     color: inherit;
+}
+
+a {
+    color: #ff76d0;
+    text-decoration: underline 1px;
+}
+
+/* br- = break minus or break prevent */
+br- {
+    white-space: nowrap;
+    hyphens: none;
 }
 
 /* Form */
@@ -121,6 +162,24 @@ p.error {
 }
 p.error::before {
   content: "⚠️ Error: "
+}
+
+/* Top bar */
+
+.top-bar {
+    background-color: #111;
+    padding: 10px 20px 0px;
+
+    nav > a {
+        display: inline-block;
+        padding: 10px 1em;
+
+        &[data-active] {
+            background: #fff;
+            color: #333;
+            text-decoration: none;
+        }
+    }
 }
 
 /* Tab bar */
