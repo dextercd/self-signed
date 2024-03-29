@@ -11,7 +11,7 @@ them in development and testing means your environment matches production more
 which helps find problems earlier in the development process.
 
 For learning how to setup a web server,
-it's of course best to use a certificate that's automatically trusted by browser.
+it's of course best to use a certificate that's automatically trusted by browsers.
 If you can't easily get one of those for some reason, then self-signed certificates can still be useful.
 
 # Why this was made
