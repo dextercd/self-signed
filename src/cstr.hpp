@@ -69,6 +69,9 @@ struct cstr {
     {
         if (len)
             delete[] release();
+
+        str = (char*)detail::nullchar;
+        len = 0;
     }
 
     char* release() noexcept
