@@ -23,12 +23,12 @@ They don't use the SAN list extension or don't generate a proper certificate cha
 Using the `commonName` field instead of a SAN list stopped working ages ago, and
 Firefox rejects certificates that are simultaneously a leaf and CA certificate.
 
-Someone that doesn't know about these issues could waste a lot of time following bad or outdated instructions or even give up.
+Someone that doesn't know about these issues could waste a lot of time following bad or outdated instructions or even end up giving up.
 This site should make it easy to generate certificates that are accepted in all major, modern browsers.
 
 Because it's a website, you don't have to learn OS specific programs for generating self-signed certificates.
 
-There's other sites that can generate self-signed certificates for you,
+There's other sites that can generate signed certificates for you,
 but every single one I tried had one or both of the aforementioned problems.
 
 Also, all but one of the sites generated the certificate server-side,
