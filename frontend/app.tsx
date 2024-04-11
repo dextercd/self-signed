@@ -14,7 +14,6 @@ import { sha2_256 } from "./md_options"
 import { SANType } from "./san_list"
 import { ZipWriter } from "./zipwriter"
 import { InterfaceErrorCode, InterfaceException } from "./interface_error"
-import { readmeText } from "./readme"
 
 interface CAConfigureProps {
     value: CertInputValue
@@ -519,8 +518,6 @@ export function App() {
         const name = certFileName(result.endSettings)
 
         const writer = new ZipWriter()
-        writer.addFile(`${name}/readme.txt`, new TextEncoder().encode(readmeText))
-
         writer.addFile(`${name}/${name}.crt`, new TextEncoder().encode(result.endCert))
         writer.addFile(`${name}/${name}.key`, new TextEncoder().encode(result.endKey))
 
