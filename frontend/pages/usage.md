@@ -18,7 +18,7 @@ Your client will verify that it's signed by a trusted CA certificate and gives a
 ## Trusting the CA certificate
 
 You likely want your client software to trust the CA certificate so you don't get security errors when using your dev site.
-Your client in this case could be a web browser or something else, such as a program calling your REST API.
+Your client in this case could be a web browser or something else such as a program calling your REST API.
 
 You should do some web searches or consult your client, library, or browser documentation to figure out how to do this.
 This page lists some methods for popular software.
@@ -133,7 +133,7 @@ See the full documentation for the [`tls` directive](https://caddyserver.com/doc
 For more details, see the [HAProxy TLS Documentation](https://www.haproxy.com/documentation/haproxy-configuration-tutorials/ssl-tls/).
 
 For HAProxy, you must combine the certificate and key into one file with the key
-coming last. On a Unix-like OS, you can do that with the following command:
+coming last. On a Unix-like environment, you can do that with the following command:
 
 ```sh
 $ cat "path/to/[domain name].crt" "path/to/[domain name].key" >"path/to/[domain name].combined.crt"
@@ -239,7 +239,7 @@ Add something like the following into your `appsettings.json`:
 
 Gunicorn [SSL settings](https://docs.gunicorn.org/en/stable/settings.html#ssl).
 
-There are various ways to configure Gunicorn, this example uses the command line:
+There are various ways to configure Gunicorn; this example uses the command line:
 
 ```sh
 gunicorn                                   \
