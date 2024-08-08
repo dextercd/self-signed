@@ -534,6 +534,10 @@ export function App() {
         <div>
             <form id="disassociate-form" autocomplete="off" style="display:none"></form>
 
+            <noscript>
+                <p>You need JavaScript enabled to use this site.</p>
+            </noscript>
+
             <CertificateSettingsForm
                 onResult={onDownload}
                 onError={setError}
