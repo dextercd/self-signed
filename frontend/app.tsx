@@ -160,7 +160,7 @@ function NoneCA() {
             Instead, it will create a single self-signed certificate that's not part of a certificate chain.</p>
 
             <p>This is not recommended because it means your end/leaf certificate also acts as its own authority.
-            Firefox does not accept these certificates and depending on the certificate's settings,
+            Firefox does not accept these certificates and, depending on the certificate's settings,
             Chrome refuses to import it through Chrome's certificate management UI on Linux.</p>
 
             <p>But hey, if none of that is an issue for you, then you can try this. :^)</p>
