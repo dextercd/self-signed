@@ -68,8 +68,8 @@ export class ZipWriter {
             const fileName = new TextEncoder().encode(textFileName)
             const commonHeader = new DataView(new ArrayBuffer(26))
             commonHeader.setInt16(0, 10, true) // Version needed to extract
-            commonHeader.setInt16(2, 0) // General purpose flags
-            commonHeader.setInt16(4, 0) // Compression
+            //commonHeader.setInt16(2, 0) // General purpose flags
+            //commonHeader.setInt16(4, 0) // Compression
             commonHeader.setUint16(6, time, true)
             commonHeader.setUint16(8, date, true)
             commonHeader.setUint32(10, crc32(fileContent), true)
@@ -86,9 +86,9 @@ export class ZipWriter {
                 fileContent.byteLength
 
             const centralExtra = new DataView(new ArrayBuffer(14))
-            centralExtra.setInt16(0, 0) // File comment length
-            centralExtra.setInt16(2, 0) // Disk number
-            centralExtra.setInt16(4, 0) // Internal file attributes
+            //centralExtra.setInt16(0, 0) // File comment length
+            //centralExtra.setInt16(2, 0) // Disk number
+            //centralExtra.setInt16(4, 0) // Internal file attributes
             centralExtra.setInt32(6, mode, true) // External file attributes
             centralExtra.setUint32(10, fileOffset, true) // Offset to local file header
 
@@ -103,8 +103,8 @@ export class ZipWriter {
 
         const endRecord = new DataView(new ArrayBuffer(22))
         endRecord.setUint32(0, 0x06054b50, true)
-        endRecord.setUint16(4, 0) // Disk number
-        endRecord.setUint16(6, 0) // Central directory disk start
+        //endRecord.setUint16(4, 0) // Disk number
+        //endRecord.setUint16(6, 0) // Central directory disk start
         endRecord.setUint16(8, centralDirectories.length / 5, true) // On disk
         endRecord.setUint16(10, centralDirectories.length / 5, true) // Total
         endRecord.setUint32(12, centralDirectoriesByteLength, true)
