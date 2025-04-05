@@ -8,6 +8,8 @@ add_executable(sign
     cert_ext.cpp
 )
 
+target_compile_options(sign PRIVATE -fno-exceptions -fno-rtti -nostdinc++)
+
 target_link_libraries(sign PRIVATE
     MbedTLS::mbedx509
 )
@@ -24,3 +26,20 @@ if (CMAKE_SYSTEM_PROCESSOR STREQUAL wasm32)
         )
     endif()
 endif()
+
+# Optimise binary with wasm-opt
+add_custom_command(
+    TARGET sign POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:sign> $<TARGET_FILE:sign>.unopt
+
+    # `cmake -E true` if debug build otherwise invoke wasm-opt
+    COMMAND "$<IF:$<CONFIG:Debug>,${CMAKE_COMMAND},${WASM_OPT}>"
+        $<$<CONFIG:Debug>:-E>
+        $<$<CONFIG:Debug>:true>
+        -o $<TARGET_FILE:sign>
+        -Os
+        --strip-debug
+        --strip-producers
+        --strip-target-features
+        $<TARGET_FILE:sign>.unopt
+)

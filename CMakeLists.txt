@@ -40,6 +40,8 @@ set(ENABLE_TESTING OFF)
 set(ENABLE_PROGRAMS OFF)
 FetchContent_MakeAvailable(Mbed_TLS)
 
+find_program(WASM_OPT NAME wasm-opt REQUIRED)
+
 # Targets
 
 add_subdirectory(src)
