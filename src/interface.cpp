@@ -142,10 +142,15 @@ bb::interface_error run()
 
     mbedtls_x509write_crt_set_version(&cert, MBEDTLS_X509_CRT_VERSION_3);
 
-    unsigned char serial_number[16];
-    fill_random(serial_number, sizeof(serial_number));
+    unsigned char serial_number_bytes[16];
+    fill_random(serial_number_bytes, sizeof(serial_number_bytes));
+    // Skip leading 0 bytes, otherwise theres a 1/256 chance the cert is invalid
+    // because of a malformed INTEGER. (Confirmed by asn1parse)
+    auto sn_length = sizeof(serial_number_bytes);
+    auto serial_number = serial_number_bytes;
+    while (sn_length && serial_number[0] == '\0') { --sn_length; ++serial_number; }
 
-    if (mbedtls_x509write_crt_set_serial_raw(&cert, serial_number, sizeof(serial_number))) {
+    if (mbedtls_x509write_crt_set_serial_raw(&cert, serial_number, sn_length)) {
         fprintf(stderr, "Couldn't set serial number.\n");
         return bb::interface_error::cert_set_serial;
     }
