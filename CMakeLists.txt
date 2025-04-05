@@ -32,7 +32,7 @@ include(FetchContent)
 FetchContent_Declare(
     Mbed_TLS
     GIT_REPOSITORY https://github.com/Mbed-TLS/mbedtls.git
-    GIT_TAG v3.5.2
+    GIT_TAG v3.6.3
 )
 
 set(MBEDTLS_CONFIG_FILE ${CMAKE_CURRENT_SOURCE_DIR}/src/mbedtls_config.h)
