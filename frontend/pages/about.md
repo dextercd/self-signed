@@ -58,4 +58,4 @@ This is the complete list of UI/frontend dependencies:
 
 The site has no server side logic and is currently hosted on GitHub Pages.
 
-At the moment, the code is closed-source, but that might change in the future.
+You can find the source code on GitHub at [dextercd/self-signed](https://github.com/dextercd/self-signed).
